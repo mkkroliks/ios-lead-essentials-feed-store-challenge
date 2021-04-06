@@ -30,7 +30,8 @@ class CoreDataFeedStore: FeedStore {
 	}()
 
 	func deleteCachedFeed(completion: @escaping DeletionCompletion) {
-		let fetchReqeust: NSFetchRequest<CoreDataFeedCache> = NSFetchRequest(entityName: cacheEntityKey)
+		let context = self.context
+		let fetchReqeust: NSFetchRequest<CoreDataFeedCache> = NSFetchRequest(entityName: self.cacheEntityKey)
 
 		let fetchResult = try! context.fetch(fetchReqeust)
 		if let cache = fetchResult.first {
@@ -40,22 +41,24 @@ class CoreDataFeedStore: FeedStore {
 	}
 
 	func insert(_ feed: [LocalFeedImage], timestamp: Date, completion: @escaping InsertionCompletion) {
-		deleteCachedFeed { _ in }
+		let context = self.context
+		self.deleteCachedFeed { _ in
+			let cacheEntity = NSEntityDescription.entity(forEntityName: self.cacheEntityKey, in: context)
+			let cache = NSManagedObject(entity: cacheEntity!, insertInto: context) as! CoreDataFeedCache
 
-		let cacheEntity = NSEntityDescription.entity(forEntityName: cacheEntityKey, in: self.context)
-		let cache = NSManagedObject(entity: cacheEntity!, insertInto: self.context) as! CoreDataFeedCache
+			feed.forEach { cache.addToFeedItems($0.toEntity(context: context)) }
 
-		feed.forEach { cache.addToFeedItems($0.toEntity(context: context)) }
+			cache.timestamp = timestamp
 
-		cache.timestamp = timestamp
+			try! self.context.save()
 
-		try! self.context.save()
-
-		completion(nil)
+			completion(nil)
+		}
 	}
 
 	func retrieve(completion: @escaping RetrievalCompletion) {
-		let request = NSFetchRequest<NSFetchRequestResult>(entityName: cacheEntityKey)
+		let context = self.context
+		let request = NSFetchRequest<NSFetchRequestResult>(entityName: self.cacheEntityKey)
 
 		let result = try! context.fetch(request)
 		if let cache = result.first as? CoreDataFeedCache {
