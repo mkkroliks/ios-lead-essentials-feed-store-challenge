@@ -7,12 +7,11 @@ import FeedStoreChallenge
 import CoreData
 
 class CoreDataFeedStore: FeedStore {
-	var context: NSManagedObjectContext { persistentContainer!.viewContext }
-
 	let storeDataModelKey = "CoreDataFeedStore"
 	let cacheEntityKey = "CoreDataFeedCache"
-	let feedImageEntityKey = "CoreDataFeedImage"
+	static let feedImageEntityKey = "CoreDataFeedImage"
 
+	var context: NSManagedObjectContext { persistentContainer!.viewContext }
 	lazy var persistentContainer: NSPersistentContainer? = {
 
 		guard let model = NSManagedObjectModel(contentsOf: Bundle(for: CoreDataFeedStore.self).url(forResource: storeDataModelKey, withExtension: "momd")!) else { return nil }
@@ -36,20 +35,7 @@ class CoreDataFeedStore: FeedStore {
 		let cacheEntity = NSEntityDescription.entity(forEntityName: cacheEntityKey, in: self.context)
 		let cache = NSManagedObject(entity: cacheEntity!, insertInto: self.context) as! CoreDataFeedCache
 
-		for feedItem in feed {
-			let localFeedImageEntity = NSEntityDescription.entity(forEntityName: feedImageEntityKey, in: self.context)
-			let coreDataFeed = NSManagedObject(entity: localFeedImageEntity!, insertInto: self.context) as! CoreDataFeedImage
-			coreDataFeed.setValue(feedItem.id, forKey: "id")
-			if let description = feedItem.description {
-				coreDataFeed.setValue(description, forKey: "descriptionText")
-			}
-			if let location = feedItem.location {
-				coreDataFeed.setValue(location, forKey: "location")
-			}
-			coreDataFeed.setValue(feedItem.url, forKey: "url")
-
-			cache.addToFeedItems(coreDataFeed)
-		}
+		feed.forEach { cache.addToFeedItems($0.toEntity(context: context)) }
 
 		cache.timestamp = timestamp
 
@@ -71,6 +57,20 @@ class CoreDataFeedStore: FeedStore {
 		} else {
 			completion(.empty)
 		}
+	}
+}
+
+extension LocalFeedImage {
+	func toEntity(context: NSManagedObjectContext) -> CoreDataFeedImage {
+		let localFeedImageEntity = NSEntityDescription.entity(forEntityName: CoreDataFeedStore.feedImageEntityKey, in: context)
+
+		let coreDataFeed = NSManagedObject(entity: localFeedImageEntity!, insertInto: context) as! CoreDataFeedImage
+		coreDataFeed.id = id
+		coreDataFeed.descriptionText = description
+		coreDataFeed.location = location
+		coreDataFeed.url = url
+
+		return coreDataFeed
 	}
 }
 
