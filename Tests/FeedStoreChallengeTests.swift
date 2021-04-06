@@ -9,11 +9,15 @@ import CoreData
 class CoreDataFeedStore: FeedStore {
 	var context: NSManagedObjectContext { persistentContainer!.viewContext }
 
+	let storeDataModelKey = "CoreDataFeedStore"
+	let cacheEntityKey = "CoreDataFeedCache"
+	let feedImageEntityKey = "CoreDataFeedImage"
+
 	lazy var persistentContainer: NSPersistentContainer? = {
 
-		guard let model = NSManagedObjectModel(contentsOf: Bundle(for: CoreDataFeedStore.self).url(forResource: "CoreDataFeedStore", withExtension: "momd")!) else { return nil }
+		guard let model = NSManagedObjectModel(contentsOf: Bundle(for: CoreDataFeedStore.self).url(forResource: storeDataModelKey, withExtension: "momd")!) else { return nil }
 
-		let container = NSPersistentContainer(name: "CoreDataFeedStore", managedObjectModel: model)
+		let container = NSPersistentContainer(name: storeDataModelKey, managedObjectModel: model)
 		let description = NSPersistentStoreDescription(url: URL(fileURLWithPath: "dev/null"))
 		description.type = NSInMemoryStoreType
 		container.persistentStoreDescriptions = [description]
@@ -29,11 +33,11 @@ class CoreDataFeedStore: FeedStore {
 	func deleteCachedFeed(completion: @escaping DeletionCompletion) {}
 
 	func insert(_ feed: [LocalFeedImage], timestamp: Date, completion: @escaping InsertionCompletion) {
-		let cacheEntity = NSEntityDescription.entity(forEntityName: "CoreDataFeedCache", in: self.context)
+		let cacheEntity = NSEntityDescription.entity(forEntityName: cacheEntityKey, in: self.context)
 		let cache = NSManagedObject(entity: cacheEntity!, insertInto: self.context) as! CoreDataFeedCache
 
 		for feedItem in feed {
-			let localFeedImageEntity = NSEntityDescription.entity(forEntityName: "CoreDataFeedImage", in: self.context)
+			let localFeedImageEntity = NSEntityDescription.entity(forEntityName: feedImageEntityKey, in: self.context)
 			let coreDataFeed = NSManagedObject(entity: localFeedImageEntity!, insertInto: self.context) as! CoreDataFeedImage
 			coreDataFeed.setValue(feedItem.id, forKey: "id")
 			if let description = feedItem.description {
@@ -55,7 +59,7 @@ class CoreDataFeedStore: FeedStore {
 	}
 
 	func retrieve(completion: @escaping RetrievalCompletion) {
-		let request = NSFetchRequest<NSFetchRequestResult>(entityName: "CoreDataFeedCache")
+		let request = NSFetchRequest<NSFetchRequestResult>(entityName: cacheEntityKey)
 
 		let result = try! context.fetch(request)
 		if let cache = result.first as? CoreDataFeedCache {
