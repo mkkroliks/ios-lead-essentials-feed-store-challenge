@@ -32,12 +32,7 @@ class CoreDataFeedStore: FeedStore {
 	func deleteCachedFeed(completion: @escaping DeletionCompletion) {}
 
 	func insert(_ feed: [LocalFeedImage], timestamp: Date, completion: @escaping InsertionCompletion) {
-		let fetchReqeust: NSFetchRequest<CoreDataFeedCache> = NSFetchRequest(entityName: cacheEntityKey)
-
-		let fetchResult = try! context.fetch(fetchReqeust)
-		if let cache = fetchResult.first {
-			context.delete(cache)
-		}
+		clearCache()
 
 		let cacheEntity = NSEntityDescription.entity(forEntityName: cacheEntityKey, in: self.context)
 		let cache = NSManagedObject(entity: cacheEntity!, insertInto: self.context) as! CoreDataFeedCache
@@ -62,6 +57,15 @@ class CoreDataFeedStore: FeedStore {
 			completion(.found(feed: feed!, timestamp: cache.timestamp!))
 		} else {
 			completion(.empty)
+		}
+	}
+
+	private func clearCache() {
+		let fetchReqeust: NSFetchRequest<CoreDataFeedCache> = NSFetchRequest(entityName: cacheEntityKey)
+
+		let fetchResult = try! context.fetch(fetchReqeust)
+		if let cache = fetchResult.first {
+			context.delete(cache)
 		}
 	}
 }
