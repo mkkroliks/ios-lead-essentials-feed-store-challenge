@@ -49,10 +49,9 @@ class CoreDataFeedStore: FeedStore {
 
 		let result = try! context.fetch(request)
 		if let cache = result.first as? CoreDataFeedCache {
-			let feed = cache.feedItems?.map { feedImage -> LocalFeedImage in
-				let image = feedImage as! CoreDataFeedImage
-				return LocalFeedImage(id: image.id!, description: image.descriptionText, location: image.location, url: image.url!)
-			}
+			let feed = cache.feedItems?
+				.compactMap { $0 as? CoreDataFeedImage }
+				.map { $0.toLocal() }
 			completion(.found(feed: feed!, timestamp: cache.timestamp!))
 		} else {
 			completion(.empty)
@@ -71,6 +70,12 @@ extension LocalFeedImage {
 		coreDataFeed.url = url
 
 		return coreDataFeed
+	}
+}
+
+extension CoreDataFeedImage {
+	func toLocal() -> LocalFeedImage {
+		LocalFeedImage(id: id!, description: descriptionText, location: location, url: url!)
 	}
 }
 
