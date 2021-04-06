@@ -29,10 +29,18 @@ class CoreDataFeedStore: FeedStore {
 		return container
 	}()
 
-	func deleteCachedFeed(completion: @escaping DeletionCompletion) {}
+	func deleteCachedFeed(completion: @escaping DeletionCompletion) {
+		let fetchReqeust: NSFetchRequest<CoreDataFeedCache> = NSFetchRequest(entityName: cacheEntityKey)
+
+		let fetchResult = try! context.fetch(fetchReqeust)
+		if let cache = fetchResult.first {
+			context.delete(cache)
+		}
+		completion(nil)
+	}
 
 	func insert(_ feed: [LocalFeedImage], timestamp: Date, completion: @escaping InsertionCompletion) {
-		clearCache()
+		deleteCachedFeed { _ in }
 
 		let cacheEntity = NSEntityDescription.entity(forEntityName: cacheEntityKey, in: self.context)
 		let cache = NSManagedObject(entity: cacheEntity!, insertInto: self.context) as! CoreDataFeedCache
@@ -57,15 +65,6 @@ class CoreDataFeedStore: FeedStore {
 			completion(.found(feed: feed!, timestamp: cache.timestamp!))
 		} else {
 			completion(.empty)
-		}
-	}
-
-	private func clearCache() {
-		let fetchReqeust: NSFetchRequest<CoreDataFeedCache> = NSFetchRequest(entityName: cacheEntityKey)
-
-		let fetchResult = try! context.fetch(fetchReqeust)
-		if let cache = fetchResult.first {
-			context.delete(cache)
 		}
 	}
 }
@@ -147,9 +146,9 @@ class FeedStoreChallengeTests: XCTestCase, FeedStoreSpecs {
 	}
 	
 	func test_delete_deliversNoErrorOnEmptyCache() throws {
-//		let sut = try makeSUT()
-//
-//		assertThatDeleteDeliversNoErrorOnEmptyCache(on: sut)
+		let sut = try makeSUT()
+
+		assertThatDeleteDeliversNoErrorOnEmptyCache(on: sut)
 	}
 	
 	func test_delete_hasNoSideEffectsOnEmptyCache() throws {
