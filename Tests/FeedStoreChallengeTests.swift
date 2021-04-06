@@ -4,14 +4,69 @@
 
 import XCTest
 import FeedStoreChallenge
+import CoreData
 
 class CoreDataFeedStore: FeedStore {
+	var context: NSManagedObjectContext { persistentContainer!.viewContext }
+
+	lazy var persistentContainer: NSPersistentContainer? = {
+
+		guard let model = NSManagedObjectModel(contentsOf: Bundle(for: CoreDataFeedStore.self).url(forResource: "CoreDataFeedStore", withExtension: "momd")!) else { return nil }
+
+		let container = NSPersistentContainer(name: "CoreDataFeedStore", managedObjectModel: model)
+		let description = NSPersistentStoreDescription(url: URL(fileURLWithPath: "dev/null"))
+		description.type = NSInMemoryStoreType
+		container.persistentStoreDescriptions = [description]
+
+		container.loadPersistentStores { description, error in
+			if let error = error {
+				fatalError("Unable to load persistent stores: \(error)")
+			}
+		}
+		return container
+	}()
+
 	func deleteCachedFeed(completion: @escaping DeletionCompletion) {}
 
-	func insert(_ feed: [LocalFeedImage], timestamp: Date, completion: @escaping InsertionCompletion) {}
+	func insert(_ feed: [LocalFeedImage], timestamp: Date, completion: @escaping InsertionCompletion) {
+		let cacheEntity = NSEntityDescription.entity(forEntityName: "CoreDataFeedCache", in: self.context)
+		let cache = NSManagedObject(entity: cacheEntity!, insertInto: self.context) as! CoreDataFeedCache
+
+		for feedItem in feed {
+			let localFeedImageEntity = NSEntityDescription.entity(forEntityName: "CoreDataFeedImage", in: self.context)
+			let coreDataFeed = NSManagedObject(entity: localFeedImageEntity!, insertInto: self.context) as! CoreDataFeedImage
+			coreDataFeed.setValue(feedItem.id, forKey: "id")
+			if let description = feedItem.description {
+				coreDataFeed.setValue(description, forKey: "descriptionText")
+			}
+			if let location = feedItem.location {
+				coreDataFeed.setValue(location, forKey: "location")
+			}
+			coreDataFeed.setValue(feedItem.url, forKey: "url")
+
+			cache.addToFeedItems(coreDataFeed)
+		}
+
+		cache.timestamp = timestamp
+
+		try! self.context.save()
+
+		completion(nil)
+	}
 
 	func retrieve(completion: @escaping RetrievalCompletion) {
-		completion(.empty)
+		let request = NSFetchRequest<NSFetchRequestResult>(entityName: "CoreDataFeedCache")
+
+		let result = try! context.fetch(request)
+		if let cache = result.first as? CoreDataFeedCache {
+			let feed = cache.feedItems?.map { feedImage -> LocalFeedImage in
+				let image = feedImage as! CoreDataFeedImage
+				return LocalFeedImage(id: image.id!, description: image.descriptionText, location: image.location, url: image.url!)
+			}
+			completion(.found(feed: feed!, timestamp: cache.timestamp!))
+		} else {
+			completion(.empty)
+		}
 	}
 }
 
@@ -42,9 +97,9 @@ class FeedStoreChallengeTests: XCTestCase, FeedStoreSpecs {
 	}
 	
 	func test_retrieve_deliversFoundValuesOnNonEmptyCache() throws {
-//		let sut = try makeSUT()
-//
-//		assertThatRetrieveDeliversFoundValuesOnNonEmptyCache(on: sut)
+		let sut = try makeSUT()
+
+		assertThatRetrieveDeliversFoundValuesOnNonEmptyCache(on: sut)
 	}
 	
 	func test_retrieve_hasNoSideEffectsOnNonEmptyCache() throws {
