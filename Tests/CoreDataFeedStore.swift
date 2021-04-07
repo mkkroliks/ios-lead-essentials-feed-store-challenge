@@ -10,9 +10,6 @@ import FeedStoreChallenge
 import CoreData
 
 class CoreDataFeedStore: FeedStore {
-	let cacheEntityKey = "CoreDataFeedCache"
-	static let feedImageEntityKey = "CoreDataFeedImage"
-
 	var context: NSManagedObjectContext { persistentContainer.viewContext }
 	let persistentContainer: NSPersistentContainer
 
@@ -36,9 +33,7 @@ class CoreDataFeedStore: FeedStore {
 	}
 
 	func retrieve(completion: @escaping RetrievalCompletion) {
-		let request = NSFetchRequest<NSFetchRequestResult>(entityName: self.cacheEntityKey)
-
-		let result = try! context.fetch(request)
+		let result = try! context.fetch(CoreDataFeedCache.createFetchRequest())
 		if let cache = result.first as? CoreDataFeedCache {
 			let feed = cache.feedItems?
 				.compactMap { $0 as? CoreDataFeedImage }
@@ -86,8 +81,10 @@ private extension NSPersistentContainer {
 }
 
 extension LocalFeedImage {
+	var feedImageEntityKey: String { "CoreDataFeedImage" }
+
 	func toEntity(context: NSManagedObjectContext) -> CoreDataFeedImage {
-		let localFeedImageEntity = NSEntityDescription.entity(forEntityName: CoreDataFeedStore.feedImageEntityKey, in: context)
+		let localFeedImageEntity = NSEntityDescription.entity(forEntityName: self.feedImageEntityKey, in: context)
 
 		let coreDataFeed = NSManagedObject(entity: localFeedImageEntity!, insertInto: context) as! CoreDataFeedImage
 		coreDataFeed.id = id
@@ -101,6 +98,10 @@ extension LocalFeedImage {
 
 extension CoreDataFeedCache {
 	static var cacheEntityKey: String { "CoreDataFeedCache" }
+
+	public static func createFetchRequest() -> NSFetchRequest<NSFetchRequestResult> {
+		return NSFetchRequest<NSFetchRequestResult>(entityName: self.cacheEntityKey)
+	}
 
 	static func deleteRequest() -> NSBatchDeleteRequest {
 		let fetchRequest: NSFetchRequest<NSFetchRequestResult> = NSFetchRequest(entityName: self.cacheEntityKey)
