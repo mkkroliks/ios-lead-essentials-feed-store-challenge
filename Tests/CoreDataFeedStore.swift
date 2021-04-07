@@ -21,10 +21,7 @@ class CoreDataFeedStore: FeedStore {
 	}
 
 	func deleteCachedFeed(completion: @escaping DeletionCompletion) {
-		let fetchRequest: NSFetchRequest<NSFetchRequestResult> = NSFetchRequest(entityName: self.cacheEntityKey)
-		let deleteRequest = NSBatchDeleteRequest(fetchRequest: fetchRequest)
-
-		try! persistentContainer.persistentStoreCoordinator.execute(deleteRequest, with: context)
+		try! persistentContainer.persistentStoreCoordinator.execute(CoreDataFeedCache.deleteRequest(), with: context)
 		completion(nil)
 	}
 
@@ -104,6 +101,15 @@ extension LocalFeedImage {
 		coreDataFeed.url = url
 
 		return coreDataFeed
+	}
+}
+
+extension CoreDataFeedCache {
+	static var cacheEntityKey: String { "CoreDataFeedCache" }
+
+	static func deleteRequest() -> NSBatchDeleteRequest {
+		let fetchRequest: NSFetchRequest<NSFetchRequestResult> = NSFetchRequest(entityName: self.cacheEntityKey)
+		return NSBatchDeleteRequest(fetchRequest: fetchRequest)
 	}
 }
 
