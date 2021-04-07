@@ -73,18 +73,23 @@ class FeedStoreIntegrationTests: XCTestCase {
 	
 	private func makeSUT() throws -> FeedStore {
 		let bundle = Bundle(for: CoreDataFeedStore.self)
-		let storeURL = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first!.appendingPathComponent("\(self.className).store")
-		return CoreDataFeedStore(storeURL: storeURL, bundle: bundle)!
+		return CoreDataFeedStore(storeURL: testStoreURL(), bundle: bundle)!
 	}
 	
 	private func setupEmptyStoreState() throws {
-		let storeURL = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first!.appendingPathComponent("\(self.className).store")
-		try? FileManager.default.removeItem(at: storeURL)
+		clearPersistentStore()
 	}
 	
 	private func undoStoreSideEffects() throws {
-		let storeURL = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first!.appendingPathComponent("\(self.className).store")
-		try? FileManager.default.removeItem(at: storeURL)
+		clearPersistentStore()
+	}
+
+	private func clearPersistentStore() {
+		try? FileManager.default.removeItem(at: testStoreURL())
+	}
+
+	private func testStoreURL() -> URL {
+		FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first!.appendingPathComponent("\(self.className).store")
 	}
 	
 }
