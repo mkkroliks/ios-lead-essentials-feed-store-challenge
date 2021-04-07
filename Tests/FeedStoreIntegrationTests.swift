@@ -27,9 +27,9 @@ class FeedStoreIntegrationTests: XCTestCase {
 	}
 	
 	func test_retrieve_deliversEmptyOnEmptyCache() throws {
-//		let sut = try makeSUT()
-//
-//		expect(sut, toRetrieve: .empty)
+		let sut = try makeSUT()
+
+		expect(sut, toRetrieve: .empty)
 	}
 	
 	func test_retrieve_deliversFeedInsertedOnAnotherInstance() throws {
@@ -72,7 +72,7 @@ class FeedStoreIntegrationTests: XCTestCase {
 	// - MARK: Helpers
 	
 	private func makeSUT() throws -> FeedStore {
-		fatalError("Must be implemented")
+		CoreDataFeedStore()
 	}
 	
 	private func setupEmptyStoreState() throws {
