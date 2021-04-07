@@ -6,6 +6,9 @@ import CoreData
 
 public final class CoreDataFeedStore: FeedStore {
 	private static let modelName = "CoreDataFeedStore"
+	private let cacheEntityKey = "CoreDataFeedCache"
+	private let feedImageEntityKey = "CoreDataFeedImage"
+
 	private static let model = NSManagedObjectModel(name: modelName, in: Bundle(for: CoreDataFeedStore.self))
 
 	private let container: NSPersistentContainer
@@ -29,7 +32,7 @@ public final class CoreDataFeedStore: FeedStore {
 	}
 
 	public func retrieve(completion: @escaping RetrievalCompletion) {
-		let request = NSFetchRequest<NSFetchRequestResult>(entityName: "CoreDataFeedCache")
+		let request = NSFetchRequest<NSFetchRequestResult>(entityName: cacheEntityKey)
 		let result = try! context.fetch(request)
 		if let cache = result.first as? CoreDataFeedCache {
 			let feed = cache.feedItems?.map { feedImage -> LocalFeedImage in
@@ -43,11 +46,11 @@ public final class CoreDataFeedStore: FeedStore {
 	}
 
 	public func insert(_ feed: [LocalFeedImage], timestamp: Date, completion: @escaping InsertionCompletion) {
-		let cacheEntity = NSEntityDescription.entity(forEntityName: "CoreDataFeedCache", in: self.context)
+		let cacheEntity = NSEntityDescription.entity(forEntityName: cacheEntityKey, in: self.context)
 		let cache = NSManagedObject(entity: cacheEntity!, insertInto: self.context) as! CoreDataFeedCache
 
 		for feedItem in feed {
-			let localFeedImageEntity = NSEntityDescription.entity(forEntityName: "CoreDataFeedImage", in: self.context)
+			let localFeedImageEntity = NSEntityDescription.entity(forEntityName: feedImageEntityKey, in: self.context)
 			let coreDataFeed = NSManagedObject(entity: localFeedImageEntity!, insertInto: self.context) as! CoreDataFeedImage
 			coreDataFeed.setValue(feedItem.id, forKey: "id")
 			if let description = feedItem.description {
