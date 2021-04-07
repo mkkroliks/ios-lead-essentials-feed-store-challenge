@@ -7,7 +7,7 @@ import CoreData
 public final class CoreDataFeedStore: FeedStore {
 	private static let modelName = "CoreDataFeedStore"
 	private let cacheEntityKey = "CoreDataFeedCache"
-	private let feedImageEntityKey = "CoreDataFeedImage"
+	static let feedImageEntityKey = "CoreDataFeedImage"
 
 	private static let model = NSManagedObjectModel(name: modelName, in: Bundle(for: CoreDataFeedStore.self))
 
@@ -48,20 +48,7 @@ public final class CoreDataFeedStore: FeedStore {
 		let cacheEntity = NSEntityDescription.entity(forEntityName: cacheEntityKey, in: self.context)
 		let cache = NSManagedObject(entity: cacheEntity!, insertInto: self.context) as! CoreDataFeedCache
 
-		for feedItem in feed {
-			let localFeedImageEntity = NSEntityDescription.entity(forEntityName: feedImageEntityKey, in: self.context)
-			let coreDataFeed = NSManagedObject(entity: localFeedImageEntity!, insertInto: self.context) as! CoreDataFeedImage
-			coreDataFeed.setValue(feedItem.id, forKey: "id")
-			if let description = feedItem.description {
-				coreDataFeed.setValue(description, forKey: "descriptionText")
-			}
-			if let location = feedItem.location {
-				coreDataFeed.setValue(location, forKey: "location")
-			}
-			coreDataFeed.setValue(feedItem.url, forKey: "url")
-
-			cache.addToFeedItems(coreDataFeed)
-		}
+		feed.forEach { cache.addToFeedItems($0.toEntity(context: context)) }
 
 		cache.timestamp = timestamp
 
@@ -78,5 +65,19 @@ public final class CoreDataFeedStore: FeedStore {
 private extension CoreDataFeedImage {
 	func toLocal() -> LocalFeedImage {
 		LocalFeedImage(id: id!, description: descriptionText, location: location, url: url!)
+	}
+}
+
+private extension LocalFeedImage {
+	func toEntity(context: NSManagedObjectContext) -> CoreDataFeedImage {
+		let localFeedImageEntity = NSEntityDescription.entity(forEntityName: CoreDataFeedStore.feedImageEntityKey, in: context)
+
+		let coreDataFeed = NSManagedObject(entity: localFeedImageEntity!, insertInto: context) as! CoreDataFeedImage
+		coreDataFeed.id = id
+		coreDataFeed.descriptionText = description
+		coreDataFeed.location = location
+		coreDataFeed.url = url
+
+		return coreDataFeed
 	}
 }
