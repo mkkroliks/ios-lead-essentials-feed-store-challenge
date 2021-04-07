@@ -73,7 +73,7 @@ class FeedStoreIntegrationTests: XCTestCase {
 	
 	private func makeSUT() throws -> FeedStore {
 		let bundle = Bundle(for: CoreDataFeedStore.self)
-		return CoreDataFeedStore(storeURL: testStoreURL(), bundle: bundle)!
+		return try! CoreDataFeedStore(storeURL: testStoreURL(), bundle: bundle)
 	}
 	
 	private func setupEmptyStoreState() throws {

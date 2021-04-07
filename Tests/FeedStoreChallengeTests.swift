@@ -96,6 +96,6 @@ class FeedStoreChallengeTests: XCTestCase, FeedStoreSpecs {
 	
 	private func makeSUT() throws -> FeedStore {
 		let bundle = Bundle(for: CoreDataFeedStore.self)
-		return CoreDataFeedStore(storeURL: URL(fileURLWithPath: "/dev/null"), bundle: bundle)!
+		return try! CoreDataFeedStore(storeURL: URL(fileURLWithPath: "/dev/null"), bundle: bundle)
 	}
 }

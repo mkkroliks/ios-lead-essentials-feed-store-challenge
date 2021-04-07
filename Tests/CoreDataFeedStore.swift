@@ -10,35 +10,21 @@ import FeedStoreChallenge
 import CoreData
 
 class CoreDataFeedStore: FeedStore {
-	let storeDataModelKey = "CoreDataFeedStore"
 	let cacheEntityKey = "CoreDataFeedCache"
 	static let feedImageEntityKey = "CoreDataFeedImage"
 
-	var context: NSManagedObjectContext { persistentContainer!.viewContext }
-	let persistentContainer: NSPersistentContainer?
+	var context: NSManagedObjectContext { persistentContainer.viewContext }
+	let persistentContainer: NSPersistentContainer
 
-	init?(storeURL: URL? = nil, bundle: Bundle = .main) {
-		guard let model = NSManagedObjectModel(contentsOf: bundle.url(forResource: storeDataModelKey, withExtension: "momd")!) else { return nil }
-
-		let container = NSPersistentContainer(name: storeDataModelKey, managedObjectModel: model)
-		if let storeURL = storeURL {
-			let description = NSPersistentStoreDescription(url: storeURL)
-			container.persistentStoreDescriptions = [description]
-		}
-
-		container.loadPersistentStores { description, error in
-			if let error = error {
-				fatalError("Unable to load persistent stores: \(error)")
-			}
-		}
-		self.persistentContainer = container
+	init(storeURL: URL? = nil, bundle: Bundle = .main) throws {
+		persistentContainer = try NSPersistentContainer.loadAndReturn(storeURL: storeURL, bundle: bundle)
 	}
 
 	func deleteCachedFeed(completion: @escaping DeletionCompletion) {
 		let fetchRequest: NSFetchRequest<NSFetchRequestResult> = NSFetchRequest(entityName: self.cacheEntityKey)
 		let deleteRequest = NSBatchDeleteRequest(fetchRequest: fetchRequest)
 
-		try! persistentContainer?.persistentStoreCoordinator.execute(deleteRequest, with: context)
+		try! persistentContainer.persistentStoreCoordinator.execute(deleteRequest, with: context)
 		completion(nil)
 	}
 
@@ -69,6 +55,41 @@ class CoreDataFeedStore: FeedStore {
 		} else {
 			completion(.empty)
 		}
+	}
+}
+
+private extension NSPersistentContainer {
+	enum Error: Swift.Error {
+		case managedObjectModelNotFound
+		case loadPersistentStoreFailure(Swift.Error)
+	}
+
+	static var storeDataModelKey: String { "CoreDataFeedStore" }
+
+	static func loadAndReturn(storeURL: URL? = nil, bundle: Bundle = .main) throws -> NSPersistentContainer {
+		guard
+			let url = bundle.url(forResource: storeDataModelKey, withExtension: "momd"),
+			let model = NSManagedObjectModel(contentsOf: url)
+		else {
+			throw Error.managedObjectModelNotFound
+		}
+
+		let container = NSPersistentContainer(name: storeDataModelKey, managedObjectModel: model)
+		if let storeURL = storeURL {
+			let description = NSPersistentStoreDescription(url: storeURL)
+			container.persistentStoreDescriptions = [description]
+		}
+
+		var loadPersistentStoreError: Swift.Error?
+		container.loadPersistentStores { description, error in
+			loadPersistentStoreError = error
+		}
+
+		if let loadPersistentStoreError = loadPersistentStoreError {
+			throw Error.loadPersistentStoreFailure(loadPersistentStoreError)
+		}
+
+		return container
 	}
 }
 
