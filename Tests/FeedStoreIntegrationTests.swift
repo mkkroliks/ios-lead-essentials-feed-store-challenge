@@ -33,14 +33,14 @@ class FeedStoreIntegrationTests: XCTestCase {
 	}
 	
 	func test_retrieve_deliversFeedInsertedOnAnotherInstance() throws {
-//		let storeToInsert = try makeSUT()
-//		let storeToLoad = try makeSUT()
-//		let feed = uniqueImageFeed()
-//		let timestamp = Date()
-//
-//		insert((feed, timestamp), to: storeToInsert)
-//
-//		expect(storeToLoad, toRetrieve: .found(feed: feed, timestamp: timestamp))
+		let storeToInsert = try makeSUT()
+		let storeToLoad = try makeSUT()
+		let feed = uniqueImageFeed()
+		let timestamp = Date()
+
+		insert((feed, timestamp), to: storeToInsert)
+
+		expect(storeToLoad, toRetrieve: .found(feed: feed, timestamp: timestamp))
 	}
 	
 	func test_insert_overridesFeedInsertedOnAnotherInstance() throws {
@@ -72,15 +72,19 @@ class FeedStoreIntegrationTests: XCTestCase {
 	// - MARK: Helpers
 	
 	private func makeSUT() throws -> FeedStore {
-		CoreDataFeedStore()
+		let bundle = Bundle(for: CoreDataFeedStore.self)
+		let storeURL = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first!.appendingPathComponent("\(self.className).store")
+		return CoreDataFeedStore(storeURL: storeURL, bundle: bundle)!
 	}
 	
 	private func setupEmptyStoreState() throws {
-		
+		let storeURL = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first!.appendingPathComponent("\(self.className).store")
+		try? FileManager.default.removeItem(at: storeURL)
 	}
 	
 	private func undoStoreSideEffects() throws {
-		
+		let storeURL = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first!.appendingPathComponent("\(self.className).store")
+		try? FileManager.default.removeItem(at: storeURL)
 	}
 	
 }

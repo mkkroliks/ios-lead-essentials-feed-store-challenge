@@ -12,22 +12,24 @@ class CoreDataFeedStore: FeedStore {
 	static let feedImageEntityKey = "CoreDataFeedImage"
 
 	var context: NSManagedObjectContext { persistentContainer!.viewContext }
-	lazy var persistentContainer: NSPersistentContainer? = {
+	let persistentContainer: NSPersistentContainer?
 
-		guard let model = NSManagedObjectModel(contentsOf: Bundle(for: CoreDataFeedStore.self).url(forResource: storeDataModelKey, withExtension: "momd")!) else { return nil }
+	init?(storeURL: URL? = nil, bundle: Bundle = .main) {
+		guard let model = NSManagedObjectModel(contentsOf: bundle.url(forResource: storeDataModelKey, withExtension: "momd")!) else { return nil }
 
 		let container = NSPersistentContainer(name: storeDataModelKey, managedObjectModel: model)
-		let description = NSPersistentStoreDescription(url: URL(fileURLWithPath: "dev/null"))
-		description.type = NSInMemoryStoreType
-		container.persistentStoreDescriptions = [description]
+		if let storeURL = storeURL {
+			let description = NSPersistentStoreDescription(url: storeURL)
+			container.persistentStoreDescriptions = [description]
+		}
 
 		container.loadPersistentStores { description, error in
 			if let error = error {
 				fatalError("Unable to load persistent stores: \(error)")
 			}
 		}
-		return container
-	}()
+		self.persistentContainer = container
+	}
 
 	func deleteCachedFeed(completion: @escaping DeletionCompletion) {
 		let fetchReqeust: NSFetchRequest<CoreDataFeedCache> = NSFetchRequest(entityName: self.cacheEntityKey)
@@ -178,6 +180,7 @@ class FeedStoreChallengeTests: XCTestCase, FeedStoreSpecs {
 	// - MARK: Helpers
 	
 	private func makeSUT() throws -> FeedStore {
-		CoreDataFeedStore()
+		let bundle = Bundle(for: CoreDataFeedStore.self)
+		return CoreDataFeedStore(storeURL: URL(fileURLWithPath: "/dev/null"), bundle: bundle)!
 	}
 }
