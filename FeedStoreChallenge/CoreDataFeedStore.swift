@@ -62,9 +62,12 @@ public final class CoreDataFeedStore: FeedStore {
 		feed.forEach { cache.addToFeedItems($0.toEntity(context: context)) }
 		cache.timestamp = timestamp
 
-		try! self.context.save()
-
-		completion(nil)
+		do {
+			try self.context.save()
+			completion(nil)
+		} catch {
+			completion(error)
+		}
 	}
 
 	public func deleteCachedFeed(completion: @escaping DeletionCompletion) {
