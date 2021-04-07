@@ -30,7 +30,6 @@ class CoreDataFeedStore: FeedStore {
 	}()
 
 	func deleteCachedFeed(completion: @escaping DeletionCompletion) {
-		let context = self.context
 		let fetchReqeust: NSFetchRequest<CoreDataFeedCache> = NSFetchRequest(entityName: self.cacheEntityKey)
 
 		let fetchResult = try! context.fetch(fetchReqeust)
@@ -41,12 +40,11 @@ class CoreDataFeedStore: FeedStore {
 	}
 
 	func insert(_ feed: [LocalFeedImage], timestamp: Date, completion: @escaping InsertionCompletion) {
-		let context = self.context
 		self.deleteCachedFeed { _ in
-			let cacheEntity = NSEntityDescription.entity(forEntityName: self.cacheEntityKey, in: context)
-			let cache = NSManagedObject(entity: cacheEntity!, insertInto: context) as! CoreDataFeedCache
+			let cacheEntity = NSEntityDescription.entity(forEntityName: self.cacheEntityKey, in: self.context)
+			let cache = NSManagedObject(entity: cacheEntity!, insertInto: self.context) as! CoreDataFeedCache
 
-			feed.forEach { cache.addToFeedItems($0.toEntity(context: context)) }
+			feed.forEach { cache.addToFeedItems($0.toEntity(context: self.context)) }
 
 			cache.timestamp = timestamp
 
@@ -57,9 +55,8 @@ class CoreDataFeedStore: FeedStore {
 	}
 
 	func retrieve(completion: @escaping RetrievalCompletion) {
-		let context = self.context
 		let request = NSFetchRequest<NSFetchRequestResult>(entityName: self.cacheEntityKey)
-
+		
 		let result = try! context.fetch(request)
 		if let cache = result.first as? CoreDataFeedCache {
 			let feed = cache.feedItems?
@@ -183,61 +180,4 @@ class FeedStoreChallengeTests: XCTestCase, FeedStoreSpecs {
 	private func makeSUT() throws -> FeedStore {
 		CoreDataFeedStore()
 	}
-	
 }
-
-//  ***********************
-//
-//  Uncomment the following tests if your implementation has failable operations.
-//
-//  Otherwise, delete the commented out code!
-//
-//  ***********************
-
-//extension FeedStoreChallengeTests: FailableRetrieveFeedStoreSpecs {
-//
-//	func test_retrieve_deliversFailureOnRetrievalError() throws {
-////		let sut = try makeSUT()
-////
-////		assertThatRetrieveDeliversFailureOnRetrievalError(on: sut)
-//	}
-//
-//	func test_retrieve_hasNoSideEffectsOnFailure() throws {
-////		let sut = try makeSUT()
-////
-////		assertThatRetrieveHasNoSideEffectsOnFailure(on: sut)
-//	}
-//
-//}
-
-//extension FeedStoreChallengeTests: FailableInsertFeedStoreSpecs {
-//
-//	func test_insert_deliversErrorOnInsertionError() throws {
-////		let sut = try makeSUT()
-////
-////		assertThatInsertDeliversErrorOnInsertionError(on: sut)
-//	}
-//
-//	func test_insert_hasNoSideEffectsOnInsertionError() throws {
-////		let sut = try makeSUT()
-////
-////		assertThatInsertHasNoSideEffectsOnInsertionError(on: sut)
-//	}
-//
-//}
-
-//extension FeedStoreChallengeTests: FailableDeleteFeedStoreSpecs {
-//
-//	func test_delete_deliversErrorOnDeletionError() throws {
-////		let sut = try makeSUT()
-////
-////		assertThatDeleteDeliversErrorOnDeletionError(on: sut)
-//	}
-//
-//	func test_delete_hasNoSideEffectsOnDeletionError() throws {
-////		let sut = try makeSUT()
-////
-////		assertThatDeleteHasNoSideEffectsOnDeletionError(on: sut)
-//	}
-//
-//}
