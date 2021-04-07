@@ -5,7 +5,7 @@
 import CoreData
 
 public final class CoreDataFeedStore: FeedStore {
-	private static let modelName = "FeedStore"
+	private static let modelName = "CoreDataFeedStore"
 	private static let model = NSManagedObjectModel(name: modelName, in: Bundle(for: CoreDataFeedStore.self))
 	
 	private let container: NSPersistentContainer
