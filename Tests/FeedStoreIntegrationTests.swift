@@ -44,36 +44,36 @@ class FeedStoreIntegrationTests: XCTestCase {
 	}
 	
 	func test_insert_overridesFeedInsertedOnAnotherInstance() throws {
-//		let storeToInsert = try makeSUT()
-//		let storeToOverride = try makeSUT()
-//		let storeToLoad = try makeSUT()
-//
-//		insert((uniqueImageFeed(), Date()), to: storeToInsert)
-//
-//		let latestFeed = uniqueImageFeed()
-//		let latestTimestamp = Date()
-//		insert((latestFeed, latestTimestamp), to: storeToOverride)
-//
-//		expect(storeToLoad, toRetrieve: .found(feed: latestFeed, timestamp: latestTimestamp))
+		let storeToInsert = try makeSUT()
+		let storeToOverride = try makeSUT()
+		let storeToLoad = try makeSUT()
+
+		insert((uniqueImageFeed(), Date()), to: storeToInsert)
+
+		let latestFeed = uniqueImageFeed()
+		let latestTimestamp = Date()
+		insert((latestFeed, latestTimestamp), to: storeToOverride)
+
+		expect(storeToLoad, toRetrieve: .found(feed: latestFeed, timestamp: latestTimestamp))
 	}
 	
 	func test_delete_deletesFeedInsertedOnAnotherInstance() throws {
-//		let storeToInsert = try makeSUT()
-//		let storeToDelete = try makeSUT()
-//		let storeToLoad = try makeSUT()
-//
-//		insert((uniqueImageFeed(), Date()), to: storeToInsert)
-//
-//		deleteCache(from: storeToDelete)
-//
-//		expect(storeToLoad, toRetrieve: .empty)
+		let storeToInsert = try makeSUT()
+		let storeToDelete = try makeSUT()
+		let storeToLoad = try makeSUT()
+
+		insert((uniqueImageFeed(), Date()), to: storeToInsert)
+
+		deleteCache(from: storeToDelete)
+
+		expect(storeToLoad, toRetrieve: .empty)
 	}
 	
 	// - MARK: Helpers
 	
 	private func makeSUT() throws -> FeedStore {
 		let bundle = Bundle(for: CoreDataFeedStore.self)
-		return try! CoreDataFeedStore(storeURL: testStoreURL(), bundle: bundle)
+		return try! CoreDataFeedStore(storeURL: testStoreURL, bundle: bundle)
 	}
 	
 	private func setupEmptyStoreState() throws {
@@ -85,11 +85,10 @@ class FeedStoreIntegrationTests: XCTestCase {
 	}
 
 	private func clearPersistentStore() {
-		try? FileManager.default.removeItem(at: testStoreURL())
+		try? FileManager.default.removeItem(at: testStoreURL)
 	}
 
-	private func testStoreURL() -> URL {
+	lazy var testStoreURL: URL = {
 		FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first!.appendingPathComponent("\(self.className).store")
-	}
-	
+	}()
 }
