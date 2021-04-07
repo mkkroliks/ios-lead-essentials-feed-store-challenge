@@ -32,12 +32,10 @@ class CoreDataFeedStore: FeedStore {
 	}
 
 	func deleteCachedFeed(completion: @escaping DeletionCompletion) {
-		let fetchReqeust: NSFetchRequest<CoreDataFeedCache> = NSFetchRequest(entityName: self.cacheEntityKey)
+		let fetchRequest: NSFetchRequest<NSFetchRequestResult> = NSFetchRequest(entityName: self.cacheEntityKey)
+		let deleteRequest = NSBatchDeleteRequest(fetchRequest: fetchRequest)
 
-		let fetchResult = try! context.fetch(fetchReqeust)
-		if let cache = fetchResult.first {
-			context.delete(cache)
-		}
+		try! persistentContainer?.persistentStoreCoordinator.execute(deleteRequest, with: context)
 		completion(nil)
 	}
 
