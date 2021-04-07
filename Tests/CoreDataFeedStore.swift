@@ -33,15 +33,21 @@ class CoreDataFeedStore: FeedStore {
 	}
 
 	func retrieve(completion: @escaping RetrievalCompletion) {
-		let result = try! context.fetch(CoreDataFeedCache.createFetchRequest())
-		if let cache = result.first as? CoreDataFeedCache {
-			let feed = cache.feedItems?
-				.compactMap { $0 as? CoreDataFeedImage }
-				.map { $0.toLocal() }
-			completion(.found(feed: feed!, timestamp: cache.timestamp!))
+		if
+			let cache = CoreDataFeedCache.fetch(context: context),
+			let feedItems = cache.feedItems {
+
+			let feed = mapToLocalFeed(feedItems: feedItems)
+			completion(.found(feed: feed, timestamp: cache.timestamp!))
 		} else {
 			completion(.empty)
 		}
+	}
+
+	private func mapToLocalFeed(feedItems: NSOrderedSet) -> [LocalFeedImage] {
+		feedItems
+			.compactMap { $0 as? CoreDataFeedImage }
+			.map { $0.toLocal() }
 	}
 }
 
@@ -118,6 +124,11 @@ extension CoreDataFeedCache {
 			addToFeedItems($0.toEntity(context: context))
 		}
 		self.timestamp = timestamp
+	}
+
+	static func fetch(context: NSManagedObjectContext) -> CoreDataFeedCache? {
+		let result = try! context.fetch(CoreDataFeedCache.createFetchRequest())
+		return result.first as? CoreDataFeedCache
 	}
 }
 
