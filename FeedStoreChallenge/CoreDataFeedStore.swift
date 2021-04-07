@@ -35,10 +35,9 @@ public final class CoreDataFeedStore: FeedStore {
 		let request = NSFetchRequest<NSFetchRequestResult>(entityName: cacheEntityKey)
 		let result = try! context.fetch(request)
 		if let cache = result.first as? CoreDataFeedCache {
-			let feed = cache.feedItems?.map { feedImage -> LocalFeedImage in
-				let image = feedImage as! CoreDataFeedImage
-				return LocalFeedImage(id: image.id!, description: image.descriptionText, location: image.location, url: image.url!)
-			}
+			let feed = cache.feedItems?
+				.compactMap { $0 as? CoreDataFeedImage }
+				.map { $0.toLocal() }
 			completion(.found(feed: feed!, timestamp: cache.timestamp!))
 		} else {
 			completion(.empty)
@@ -73,5 +72,11 @@ public final class CoreDataFeedStore: FeedStore {
 
 	public func deleteCachedFeed(completion: @escaping DeletionCompletion) {
 		fatalError("Must be implemented")
+	}
+}
+
+private extension CoreDataFeedImage {
+	func toLocal() -> LocalFeedImage {
+		LocalFeedImage(id: id!, description: descriptionText, location: location, url: url!)
 	}
 }
