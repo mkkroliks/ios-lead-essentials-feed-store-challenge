@@ -24,9 +24,7 @@ class CoreDataFeedStore: FeedStore {
 
 	func insert(_ feed: [LocalFeedImage], timestamp: Date, completion: @escaping InsertionCompletion) {
 		self.deleteCachedFeed { _ in
-			let context = self.context
-			let cache = CoreDataFeedCache.create(context: context)
-			cache.fill(for: context, with: feed, timestamp: timestamp)
+			CoreDataFeedCache.insert(feed: feed, timestamp: timestamp, context: self.context)
 			try! self.context.save()
 			completion(nil)
 		}
@@ -114,12 +112,17 @@ extension CoreDataFeedCache {
 		return NSBatchDeleteRequest(fetchRequest: fetchRequest)
 	}
 
-	static func create(context: NSManagedObjectContext) -> CoreDataFeedCache {
+	private static func create(context: NSManagedObjectContext) -> CoreDataFeedCache {
 		let cacheEntity = NSEntityDescription.entity(forEntityName: self.cacheEntityKey, in: context)
 		return NSManagedObject(entity: cacheEntity!, insertInto: context) as! CoreDataFeedCache
 	}
 
-	func fill(for context: NSManagedObjectContext, with feed: [LocalFeedImage], timestamp: Date) {
+	static func insert(feed: [LocalFeedImage], timestamp: Date, context: NSManagedObjectContext) {
+		let cache = create(context: context)
+		cache.fill(with: feed, timestamp: timestamp, context: context)
+	}
+
+	private func fill(with feed: [LocalFeedImage], timestamp: Date, context: NSManagedObjectContext) {
 		feed.forEach {
 			addToFeedItems($0.toEntity(context: context))
 		}
