@@ -15,8 +15,8 @@ extension CoreDataFeedCache {
 		return NSFetchRequest<CoreDataFeedCache>(entityName: "CoreDataFeedCache")
 	}
 
-	@NSManaged public var timestamp: Date?
-	@NSManaged public var feedItems: NSOrderedSet?
+	@NSManaged public var timestamp: Date
+	@NSManaged public var feedItems: NSOrderedSet
 }
 
 // MARK: Generated accessors for feedItems

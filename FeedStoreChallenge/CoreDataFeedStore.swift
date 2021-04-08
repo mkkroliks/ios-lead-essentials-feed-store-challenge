@@ -32,11 +32,9 @@ public final class CoreDataFeedStore: FeedStore {
 	public func retrieve(completion: @escaping RetrievalCompletion) {
 		do {
 			if
-				let cache = try CoreDataFeedCache.fetch(context: context),
-				let feedItems = cache.feedItems,
-				let timestamp = cache.timestamp {
-				let feed = mapToLocalFeed(feedItems: feedItems)
-				completion(.found(feed: feed, timestamp: timestamp))
+				let cache = try CoreDataFeedCache.fetch(context: context) {
+				let feed = mapToLocalFeed(feedItems: cache.feedItems)
+				completion(.found(feed: feed, timestamp: cache.timestamp))
 			} else {
 				completion(.empty)
 			}
@@ -75,20 +73,6 @@ public final class CoreDataFeedStore: FeedStore {
 		feedItems
 			.compactMap { $0 as? CoreDataFeedImage }
 			.compactMap { $0.toLocal() }
-	}
-}
-
-extension LocalFeedImage {
-	var feedImageEntityKey: String { "CoreDataFeedImage" }
-
-	func toEntity(context: NSManagedObjectContext) -> CoreDataFeedImage {
-		let coreDataFeed = CoreDataFeedImage(context: context)
-		coreDataFeed.id = id
-		coreDataFeed.descriptionText = description
-		coreDataFeed.location = location
-		coreDataFeed.url = url
-
-		return coreDataFeed
 	}
 }
 
