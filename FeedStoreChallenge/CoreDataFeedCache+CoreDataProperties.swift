@@ -52,4 +52,23 @@ extension CoreDataFeedCache {
 	@NSManaged public func removeFromFeedItems(_ values: NSOrderedSet)
 }
 
+extension CoreDataFeedCache {
+	static func deleteRequest() -> NSBatchDeleteRequest {
+		return NSBatchDeleteRequest(fetchRequest: CoreDataFeedCache.fetchRequest())
+	}
+
+	static func insert(feed: [LocalFeedImage], timestamp: Date, context: NSManagedObjectContext) {
+		let cache = self.init(context: context)
+		feed.forEach {
+			cache.addToFeedItems($0.toEntity(context: context))
+		}
+		cache.timestamp = timestamp
+	}
+
+	static func fetch(context: NSManagedObjectContext) throws -> CoreDataFeedCache? {
+		let result = try context.fetch(CoreDataFeedCache.fetchRequest())
+		return result.first as? CoreDataFeedCache
+	}
+}
+
 extension CoreDataFeedCache: Identifiable {}

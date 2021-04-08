@@ -75,29 +75,3 @@ public final class CoreDataFeedStore: FeedStore {
 			.compactMap { $0.toLocal() }
 	}
 }
-
-extension CoreDataFeedCache {
-	private static var cacheEntityKey: String { "CoreDataFeedCache" }
-
-	public static func createFetchRequest() -> NSFetchRequest<NSFetchRequestResult> {
-		return NSFetchRequest<NSFetchRequestResult>(entityName: self.cacheEntityKey)
-	}
-
-	static func deleteRequest() -> NSBatchDeleteRequest {
-		let fetchRequest: NSFetchRequest<NSFetchRequestResult> = NSFetchRequest(entityName: self.cacheEntityKey)
-		return NSBatchDeleteRequest(fetchRequest: fetchRequest)
-	}
-
-	static func insert(feed: [LocalFeedImage], timestamp: Date, context: NSManagedObjectContext) {
-		let cache = self.init(context: context)
-		feed.forEach {
-			cache.addToFeedItems($0.toEntity(context: context))
-		}
-		cache.timestamp = timestamp
-	}
-
-	static func fetch(context: NSManagedObjectContext) throws -> CoreDataFeedCache? {
-		let result = try context.fetch(CoreDataFeedCache.createFetchRequest())
-		return result.first as? CoreDataFeedCache
-	}
-}
