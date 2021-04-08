@@ -78,21 +78,10 @@ public final class CoreDataFeedStore: FeedStore {
 }
 
 extension LocalFeedImage {
-	enum Error: Swift.Error {
-		case entityNotFound
-		case managedObjectCreationFailure
-	}
-
 	var feedImageEntityKey: String { "CoreDataFeedImage" }
 
-	func toEntity(context: NSManagedObjectContext) throws -> CoreDataFeedImage {
-		guard let localFeedImageEntity = NSEntityDescription.entity(forEntityName: self.feedImageEntityKey, in: context) else {
-			throw Error.entityNotFound
-		}
-		guard let coreDataFeed = NSManagedObject(entity: localFeedImageEntity, insertInto: context) as? CoreDataFeedImage else {
-			throw Error.managedObjectCreationFailure
-		}
-
+	func toEntity(context: NSManagedObjectContext) -> CoreDataFeedImage {
+		let coreDataFeed = CoreDataFeedImage(context: context)
 		coreDataFeed.id = id
 		coreDataFeed.descriptionText = description
 		coreDataFeed.location = location
