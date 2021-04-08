@@ -52,17 +52,18 @@ public final class CoreDataFeedStore: FeedStore {
 		let fetchRequest: NSFetchRequest<NSFetchRequestResult> = NSFetchRequest(entityName: self.cacheEntityKey)
 		let deleteRequest = NSBatchDeleteRequest(fetchRequest: fetchRequest)
 		try container.persistentStoreCoordinator.execute(deleteRequest, with: context)
+		try context.save()
 	}
 
 	public func insert(_ feed: [LocalFeedImage], timestamp: Date, completion: @escaping InsertionCompletion) {
 		let cacheEntity = NSEntityDescription.entity(forEntityName: cacheEntityKey, in: self.context)
 		let cache = NSManagedObject(entity: cacheEntity!, insertInto: self.context) as! CoreDataFeedCache
 
-		try! deleteCache()
-		feed.forEach { cache.addToFeedItems($0.toEntity(context: context)) }
-		cache.timestamp = timestamp
-
 		do {
+			try deleteCache()
+			feed.forEach { cache.addToFeedItems($0.toEntity(context: context)) }
+			cache.timestamp = timestamp
+
 			try self.context.save()
 			completion(nil)
 		} catch {
