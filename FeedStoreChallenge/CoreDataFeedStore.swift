@@ -53,7 +53,7 @@ public final class CoreDataFeedStore: FeedStore {
 	public func insert(_ feed: [LocalFeedImage], timestamp: Date, completion: @escaping InsertionCompletion) {
 		do {
 			try deleteCache()
-			try CoreDataFeedCache.insert(feed: feed, timestamp: timestamp, context: self.context)
+			CoreDataFeedCache.insert(feed: feed, timestamp: timestamp, context: self.context)
 			try self.context.save()
 			completion(nil)
 		} catch {
@@ -92,11 +92,6 @@ extension LocalFeedImage {
 }
 
 extension CoreDataFeedCache {
-	enum Error: Swift.Error {
-		case entityNotFound
-		case managedObjectCreationFailure
-	}
-
 	private static var cacheEntityKey: String { "CoreDataFeedCache" }
 
 	public static func createFetchRequest() -> NSFetchRequest<NSFetchRequestResult> {
@@ -108,26 +103,12 @@ extension CoreDataFeedCache {
 		return NSBatchDeleteRequest(fetchRequest: fetchRequest)
 	}
 
-	private static func create(context: NSManagedObjectContext) throws -> CoreDataFeedCache {
-		guard let cacheEntity = NSEntityDescription.entity(forEntityName: self.cacheEntityKey, in: context) else {
-			throw Error.entityNotFound
+	static func insert(feed: [LocalFeedImage], timestamp: Date, context: NSManagedObjectContext) {
+		let cache = self.init(context: context)
+		feed.forEach {
+			cache.addToFeedItems($0.toEntity(context: context))
 		}
-		guard let cache = NSManagedObject(entity: cacheEntity, insertInto: context) as? CoreDataFeedCache else {
-			throw Error.managedObjectCreationFailure
-		}
-		return cache
-	}
-
-	static func insert(feed: [LocalFeedImage], timestamp: Date, context: NSManagedObjectContext) throws {
-		let cache = try create(context: context)
-		try cache.fill(with: feed, timestamp: timestamp, context: context)
-	}
-
-	private func fill(with feed: [LocalFeedImage], timestamp: Date, context: NSManagedObjectContext) throws {
-		try feed.forEach {
-			addToFeedItems(try $0.toEntity(context: context))
-		}
-		self.timestamp = timestamp
+		cache.timestamp = timestamp
 	}
 
 	static func fetch(context: NSManagedObjectContext) throws -> CoreDataFeedCache? {
