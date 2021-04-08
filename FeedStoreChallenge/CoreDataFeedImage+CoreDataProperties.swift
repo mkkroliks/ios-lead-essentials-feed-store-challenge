@@ -19,6 +19,10 @@ extension CoreDataFeedImage {
 	@NSManaged public var id: UUID
 	@NSManaged public var location: String?
 	@NSManaged public var url: URL
+
+	func toLocal() -> LocalFeedImage {
+		return LocalFeedImage(id: id, description: descriptionText, location: location, url: url)
+	}
 }
 
 extension CoreDataFeedImage: Identifiable {}

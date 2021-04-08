@@ -117,9 +117,3 @@ extension CoreDataFeedCache {
 		return result.first as? CoreDataFeedCache
 	}
 }
-
-extension CoreDataFeedImage {
-	func toLocal() -> LocalFeedImage {
-		return LocalFeedImage(id: id, description: descriptionText, location: location, url: url)
-	}
-}
