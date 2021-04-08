@@ -30,16 +30,18 @@ public final class CoreDataFeedStore: FeedStore {
 	}
 
 	public func retrieve(completion: @escaping RetrievalCompletion) {
-		do {
-			if
-				let cache = try CoreDataFeedCache.fetch(context: context) {
-				let feed = mapToLocalFeed(feedItems: cache.feedItems)
-				completion(.found(feed: feed, timestamp: cache.timestamp))
-			} else {
-				completion(.empty)
+		context.perform {
+			do {
+				if
+					let cache = try CoreDataFeedCache.fetch(context: self.context) {
+					let feed = self.mapToLocalFeed(feedItems: cache.feedItems)
+					completion(.found(feed: feed, timestamp: cache.timestamp))
+				} else {
+					completion(.empty)
+				}
+			} catch {
+				completion(.failure(error))
 			}
-		} catch {
-			completion(.failure(error))
 		}
 	}
 
@@ -48,24 +50,28 @@ public final class CoreDataFeedStore: FeedStore {
 	}
 
 	public func insert(_ feed: [LocalFeedImage], timestamp: Date, completion: @escaping InsertionCompletion) {
-		do {
-			try deleteCache()
-			CoreDataFeedCache.insert(feed: feed, timestamp: timestamp, context: self.context)
-			try self.context.save()
-			completion(nil)
-		} catch {
-			context.rollback()
-			completion(error)
+		context.perform {
+			do {
+				try self.deleteCache()
+				CoreDataFeedCache.insert(feed: feed, timestamp: timestamp, context: self.context)
+				try self.context.save()
+				completion(nil)
+			} catch {
+				self.context.rollback()
+				completion(error)
+			}
 		}
 	}
 
 	public func deleteCachedFeed(completion: @escaping DeletionCompletion) {
-		do {
-			try deleteCache()
-			try context.save()
-			completion(nil)
-		} catch {
-			completion(error)
+		context.perform {
+			do {
+				try self.deleteCache()
+				try self.context.save()
+				completion(nil)
+			} catch {
+				completion(error)
+			}
 		}
 	}
 
