@@ -46,8 +46,7 @@ public final class CoreDataFeedStore: FeedStore {
 	}
 
 	private func deleteCache() throws {
-		try container.persistentStoreCoordinator.execute(CoreDataFeedCache.deleteRequest(), with: context)
-		try context.save()
+		try context.execute(CoreDataFeedCache.deleteRequest())
 	}
 
 	public func insert(_ feed: [LocalFeedImage], timestamp: Date, completion: @escaping InsertionCompletion) {
@@ -64,6 +63,7 @@ public final class CoreDataFeedStore: FeedStore {
 	public func deleteCachedFeed(completion: @escaping DeletionCompletion) {
 		do {
 			try deleteCache()
+			try context.save()
 			completion(nil)
 		} catch {
 			completion(error)
