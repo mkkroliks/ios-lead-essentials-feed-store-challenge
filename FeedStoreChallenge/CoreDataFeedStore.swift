@@ -119,13 +119,7 @@ extension CoreDataFeedCache {
 }
 
 extension CoreDataFeedImage {
-	func toLocal() -> LocalFeedImage? {
-		guard
-			let id = id,
-			let url = url
-		else {
-			return nil
-		}
+	func toLocal() -> LocalFeedImage {
 		return LocalFeedImage(id: id, description: descriptionText, location: location, url: url)
 	}
 }
