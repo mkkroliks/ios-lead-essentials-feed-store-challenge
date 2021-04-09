@@ -17,10 +17,6 @@ class CoreDataFeedCache: NSManagedObject {
 }
 
 extension CoreDataFeedCache {
-	static func deleteRequest() -> NSBatchDeleteRequest {
-		return NSBatchDeleteRequest(fetchRequest: CoreDataFeedCache.fetchRequest())
-	}
-
 	static func insert(feed: [LocalFeedImage], timestamp: Date, context: NSManagedObjectContext) {
 		let cache = self.init(context: context)
 		cache.feedItems = NSOrderedSet(array: feed.map { $0.toEntity(context: context) })
@@ -28,7 +24,7 @@ extension CoreDataFeedCache {
 	}
 
 	static func fetch(context: NSManagedObjectContext) throws -> CoreDataFeedCache? {
-		let result = try context.fetch(CoreDataFeedCache.fetchRequest())
+		let result = try context.fetch(fetchRequest())
 		return result.first as? CoreDataFeedCache
 	}
 

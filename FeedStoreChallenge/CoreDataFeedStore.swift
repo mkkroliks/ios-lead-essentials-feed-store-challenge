@@ -46,7 +46,9 @@ public final class CoreDataFeedStore: FeedStore {
 	}
 
 	private func deleteCache() throws {
-		try context.execute(CoreDataFeedCache.deleteRequest())
+		if let cache = try CoreDataFeedCache.fetch(context: context) {
+			context.delete(cache)
+		}
 	}
 
 	public func insert(_ feed: [LocalFeedImage], timestamp: Date, completion: @escaping InsertionCompletion) {
