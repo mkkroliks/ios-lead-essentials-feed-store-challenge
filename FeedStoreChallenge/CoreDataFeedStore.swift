@@ -34,7 +34,7 @@ public final class CoreDataFeedStore: FeedStore {
 			do {
 				if
 					let cache = try CoreDataFeedCache.fetch(context: self.context) {
-					let feed = self.mapToLocalFeed(feedItems: cache.feedItems)
+					let feed = cache.toLocalFeed()
 					completion(.found(feed: feed, timestamp: cache.timestamp))
 				} else {
 					completion(.empty)
@@ -74,11 +74,5 @@ public final class CoreDataFeedStore: FeedStore {
 				completion(error)
 			}
 		}
-	}
-
-	private func mapToLocalFeed(feedItems: NSOrderedSet) -> [LocalFeedImage] {
-		feedItems
-			.compactMap { $0 as? CoreDataFeedImage }
-			.compactMap { $0.toLocal() }
 	}
 }

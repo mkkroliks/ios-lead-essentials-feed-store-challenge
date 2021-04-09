@@ -35,4 +35,10 @@ extension CoreDataFeedCache {
 	static func fetchRequest() -> NSFetchRequest<CoreDataFeedCache> {
 		return NSFetchRequest<CoreDataFeedCache>(entityName: "CoreDataFeedCache")
 	}
+
+	func toLocalFeed() -> [LocalFeedImage] {
+		feedItems
+			.compactMap { $0 as? CoreDataFeedImage }
+			.compactMap { $0.toLocal() }
+	}
 }
