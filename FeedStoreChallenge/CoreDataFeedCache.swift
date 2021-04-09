@@ -11,9 +11,9 @@ import Foundation
 import CoreData
 
 @objc(CoreDataFeedCache)
-public class CoreDataFeedCache: NSManagedObject {
-	@NSManaged public var timestamp: Date
-	@NSManaged public var feedItems: NSOrderedSet
+class CoreDataFeedCache: NSManagedObject {
+	@NSManaged var timestamp: Date
+	@NSManaged var feedItems: NSOrderedSet
 }
 
 extension CoreDataFeedCache {

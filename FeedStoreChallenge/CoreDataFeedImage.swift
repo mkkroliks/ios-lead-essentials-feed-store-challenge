@@ -11,11 +11,11 @@ import Foundation
 import CoreData
 
 @objc(CoreDataFeedImage)
-public class CoreDataFeedImage: NSManagedObject {
-	@NSManaged public var descriptionText: String?
-	@NSManaged public var id: UUID
-	@NSManaged public var location: String?
-	@NSManaged public var url: URL
+class CoreDataFeedImage: NSManagedObject {
+	@NSManaged var descriptionText: String?
+	@NSManaged var id: UUID
+	@NSManaged var location: String?
+	@NSManaged var url: URL
 
 	func toLocal() -> LocalFeedImage {
 		return LocalFeedImage(id: id, description: descriptionText, location: location, url: url)
